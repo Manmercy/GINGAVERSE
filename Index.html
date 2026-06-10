@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- GINGAVERSE : CARD ALBUM | GitHub Pages Build | v0.7.7 | index.html -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⬡ GINGAVERSE — v0.7.3-desktop-layout-restore</title>
+<title>⬡ GINGAVERSE — v0.7.7 GitHub Build</title>
 <!-- APP_VERSION: v0.4.6-badge-album-flip -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -3388,6 +3389,105 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Montse
     height:214px!important;
     aspect-ratio:auto!important;
     flex:0 0 auto!important;
+  }
+}
+
+
+/* ══════════ GPT PATCH 33 — v0.7.6 Profile Badge polish ══════════ */
+/* Minimal patch: improve My Profile badge spacing only, and keep all existing features. */
+
+#view-profile .badges-panel{
+  padding:26px!important;
+}
+
+#view-profile #badge-grid,
+#view-profile #badge-grid.g56-badge-row{
+  width:100%!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:visible!important;
+  display:block!important;
+}
+
+#view-profile #badge-grid > .g56-badge-row,
+#view-profile #badge-grid.g56-badge-row > .g56-badge-row{
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  min-width:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  justify-content:stretch!important;
+  justify-items:center!important;
+  align-items:center!important;
+  column-gap:16px!important;
+  row-gap:18px!important;
+}
+
+#view-profile #badge-grid .g56-badge-circle{
+  width:68px!important;
+  height:68px!important;
+  min-width:68px!important;
+  min-height:68px!important;
+  max-width:68px!important;
+  max-height:68px!important;
+  border-radius:50%!important;
+  font-size:31px!important;
+  border:1px solid var(--orange)!important;
+  background:rgba(255,85,0,.055)!important;
+  box-shadow:none!important;
+  margin:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+
+#view-profile #badge-grid .g56-badge-circle.earned{
+  background:rgba(255,85,0,.12)!important;
+  box-shadow:0 4px 10px rgba(255,85,0,.08)!important;
+}
+
+#view-profile #badge-grid .g56-badge-circle:hover{
+  transform:translateY(-2px) scale(1.035)!important;
+  box-shadow:0 6px 14px rgba(255,85,0,.13)!important;
+}
+
+@media(max-width:980px){
+  #view-profile #badge-grid > .g56-badge-row,
+  #view-profile #badge-grid.g56-badge-row > .g56-badge-row{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    column-gap:14px!important;
+    row-gap:16px!important;
+  }
+  #view-profile #badge-grid .g56-badge-circle{
+    width:64px!important;
+    height:64px!important;
+    min-width:64px!important;
+    min-height:64px!important;
+    max-width:64px!important;
+    max-height:64px!important;
+    font-size:29px!important;
+  }
+}
+
+@media(max-width:620px){
+  #view-profile .badges-panel{
+    padding:20px!important;
+  }
+  #view-profile #badge-grid > .g56-badge-row,
+  #view-profile #badge-grid.g56-badge-row > .g56-badge-row{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    column-gap:12px!important;
+    row-gap:14px!important;
+  }
+  #view-profile #badge-grid .g56-badge-circle{
+    width:58px!important;
+    height:58px!important;
+    min-width:58px!important;
+    min-height:58px!important;
+    max-width:58px!important;
+    max-height:58px!important;
+    font-size:26px!important;
   }
 }
 
@@ -7318,6 +7418,561 @@ renderShop = function(){
   updateDailyCountdown();
   ensureShopTimer();
   updateNavMini();
+};
+
+
+/* ══════════ GPT PATCH 31 JS — v0.7.4 Reveal Card SFX ══════════ */
+/* Minimal patch only: generated Web Audio sound when a card is revealed. No external audio files. */
+
+let G74AudioCtx=null;
+
+function g74GetAudioCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) return null;
+  if(!G74AudioCtx) G74AudioCtx=new AC();
+  if(G74AudioCtx.state==='suspended'){
+    G74AudioCtx.resume().catch(()=>{});
+  }
+  return G74AudioCtx;
+}
+
+function playRevealCardSFX(rarity='common'){
+  const ctx=g74GetAudioCtx();
+  if(!ctx) return;
+
+  const now=ctx.currentTime;
+  const master=ctx.createGain();
+  master.gain.setValueAtTime(0.0001,now);
+  master.gain.exponentialRampToValueAtTime(0.13,now+0.015);
+  master.gain.exponentialRampToValueAtTime(0.0001,now+0.42);
+  master.connect(ctx.destination);
+
+  const base={
+    common:520,
+    rare:660,
+    epic:820,
+    legendary:980
+  }[rarity]||560;
+
+  /* Soft flip whoosh */
+  const noiseBuffer=ctx.createBuffer(1,ctx.sampleRate*0.18,ctx.sampleRate);
+  const data=noiseBuffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){
+    const t=i/data.length;
+    data[i]=(Math.random()*2-1)*(1-t)*0.42;
+  }
+  const noise=ctx.createBufferSource();
+  noise.buffer=noiseBuffer;
+  const nf=ctx.createBiquadFilter();
+  nf.type='bandpass';
+  nf.frequency.setValueAtTime(900,now);
+  nf.frequency.exponentialRampToValueAtTime(2600,now+0.16);
+  const ng=ctx.createGain();
+  ng.gain.setValueAtTime(0.0001,now);
+  ng.gain.exponentialRampToValueAtTime(0.095,now+0.018);
+  ng.gain.exponentialRampToValueAtTime(0.0001,now+0.19);
+  noise.connect(nf);
+  nf.connect(ng);
+  ng.connect(master);
+  noise.start(now);
+  noise.stop(now+0.2);
+
+  /* Main reveal ping */
+  const osc=ctx.createOscillator();
+  osc.type='triangle';
+  osc.frequency.setValueAtTime(base*0.72,now+0.025);
+  osc.frequency.exponentialRampToValueAtTime(base,now+0.105);
+  const og=ctx.createGain();
+  og.gain.setValueAtTime(0.0001,now+0.02);
+  og.gain.exponentialRampToValueAtTime(0.16,now+0.055);
+  og.gain.exponentialRampToValueAtTime(0.0001,now+0.32);
+  osc.connect(og);
+  og.connect(master);
+  osc.start(now+0.02);
+  osc.stop(now+0.34);
+
+  /* Rarity sparkle */
+  const sparkleCount={common:1,rare:2,epic:3,legendary:4}[rarity]||1;
+  for(let i=0;i<sparkleCount;i++){
+    const s=ctx.createOscillator();
+    s.type='sine';
+    const st=now+0.09+i*0.045;
+    s.frequency.setValueAtTime(base*(1.55+i*0.22),st);
+    s.frequency.exponentialRampToValueAtTime(base*(1.85+i*0.24),st+0.08);
+    const sg=ctx.createGain();
+    sg.gain.setValueAtTime(0.0001,st);
+    sg.gain.exponentialRampToValueAtTime(0.055,st+0.015);
+    sg.gain.exponentialRampToValueAtTime(0.0001,st+0.14);
+    s.connect(sg);
+    sg.connect(master);
+    s.start(st);
+    s.stop(st+0.15);
+  }
+
+  /* Legendary has a small low shimmer */
+  if(rarity==='legendary'){
+    const low=ctx.createOscillator();
+    low.type='sine';
+    low.frequency.setValueAtTime(180,now+0.02);
+    low.frequency.exponentialRampToValueAtTime(260,now+0.34);
+    const lg=ctx.createGain();
+    lg.gain.setValueAtTime(0.0001,now+0.02);
+    lg.gain.exponentialRampToValueAtTime(0.06,now+0.08);
+    lg.gain.exponentialRampToValueAtTime(0.0001,now+0.40);
+    low.connect(lg);
+    lg.connect(master);
+    low.start(now+0.02);
+    low.stop(now+0.42);
+  }
+}
+
+const g74OldRevealCard = revealCard;
+revealCard = function(i){
+  const slot=$(`cs-${i}`);
+  const wasFlipped=slot && slot.classList.contains('flipped');
+
+  g74OldRevealCard(i);
+
+  const nowFlipped=slot && slot.classList.contains('flipped');
+  if(!wasFlipped && nowFlipped && PS && PS.results && PS.results[i]){
+    playRevealCardSFX(PS.results[i].card.rarity);
+  }
+};
+
+
+/* ══════════ GPT PATCH 32 JS — v0.7.5 Louder Reveal SFX + Audio Unlock ══════════ */
+/* Fix for browsers that keep AudioContext suspended until the first direct user tap. */
+
+let G75AudioCtx=null;
+let G75Unlocked=false;
+
+function g75AudioCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) return null;
+  if(!G75AudioCtx) G75AudioCtx=new AC();
+  return G75AudioCtx;
+}
+
+function unlockGingaAudio(){
+  const ctx=g75AudioCtx();
+  if(!ctx) return;
+
+  const finish=()=>{
+    if(G75Unlocked) return;
+    G75Unlocked=true;
+
+    /* ultra-short silent tick to unlock iOS/Safari/Chrome audio path */
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,ctx.currentTime);
+    const o=ctx.createOscillator();
+    o.frequency.setValueAtTime(80,ctx.currentTime);
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime+0.025);
+  };
+
+  if(ctx.state==='suspended'){
+    ctx.resume().then(finish).catch(()=>{});
+  }else{
+    finish();
+  }
+}
+
+/* Unlock audio on the first real user interaction anywhere. */
+window.addEventListener('pointerdown',unlockGingaAudio,{once:true,passive:true});
+window.addEventListener('touchstart',unlockGingaAudio,{once:true,passive:true});
+window.addEventListener('keydown',unlockGingaAudio,{once:true});
+
+/* Louder, more obvious reveal sound. */
+playRevealCardSFX = function(rarity='common'){
+  const ctx=g75AudioCtx();
+  if(!ctx) return;
+
+  const run=()=>{
+    const now=ctx.currentTime+0.005;
+    const master=ctx.createGain();
+    master.gain.setValueAtTime(0.0001,now);
+    master.gain.exponentialRampToValueAtTime(0.42,now+0.018);
+    master.gain.exponentialRampToValueAtTime(0.0001,now+0.62);
+    master.connect(ctx.destination);
+
+    const base={
+      common:620,
+      rare:760,
+      epic:920,
+      legendary:1080
+    }[rarity]||620;
+
+    /* Clear attack click / card snap */
+    const click=ctx.createOscillator();
+    click.type='square';
+    click.frequency.setValueAtTime(base*1.15,now);
+    click.frequency.exponentialRampToValueAtTime(base*0.55,now+0.055);
+    const cg=ctx.createGain();
+    cg.gain.setValueAtTime(0.0001,now);
+    cg.gain.exponentialRampToValueAtTime(0.26,now+0.008);
+    cg.gain.exponentialRampToValueAtTime(0.0001,now+0.085);
+    click.connect(cg);
+    cg.connect(master);
+    click.start(now);
+    click.stop(now+0.09);
+
+    /* Whoosh noise */
+    const dur=0.22;
+    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      const t=i/data.length;
+      data[i]=(Math.random()*2-1)*Math.pow(1-t,1.4)*0.75;
+    }
+    const noise=ctx.createBufferSource();
+    noise.buffer=noiseBuffer;
+    const nf=ctx.createBiquadFilter();
+    nf.type='bandpass';
+    nf.frequency.setValueAtTime(700,now);
+    nf.frequency.exponentialRampToValueAtTime(3600,now+dur);
+    nf.Q.setValueAtTime(0.9,now);
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0.0001,now);
+    ng.gain.exponentialRampToValueAtTime(0.30,now+0.025);
+    ng.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+    noise.connect(nf);
+    nf.connect(ng);
+    ng.connect(master);
+    noise.start(now);
+    noise.stop(now+dur);
+
+    /* Main magic ping */
+    const ping=ctx.createOscillator();
+    ping.type='triangle';
+    ping.frequency.setValueAtTime(base*0.72,now+0.055);
+    ping.frequency.exponentialRampToValueAtTime(base*1.12,now+0.20);
+    const pg=ctx.createGain();
+    pg.gain.setValueAtTime(0.0001,now+0.045);
+    pg.gain.exponentialRampToValueAtTime(0.30,now+0.085);
+    pg.gain.exponentialRampToValueAtTime(0.0001,now+0.48);
+    ping.connect(pg);
+    pg.connect(master);
+    ping.start(now+0.045);
+    ping.stop(now+0.50);
+
+    /* Rarity sparkles */
+    const sparkleCount={common:1,rare:2,epic:3,legendary:5}[rarity]||1;
+    for(let i=0;i<sparkleCount;i++){
+      const s=ctx.createOscillator();
+      s.type='sine';
+      const st=now+0.14+i*0.045;
+      s.frequency.setValueAtTime(base*(1.55+i*.20),st);
+      s.frequency.exponentialRampToValueAtTime(base*(2.02+i*.18),st+0.10);
+      const sg=ctx.createGain();
+      sg.gain.setValueAtTime(0.0001,st);
+      sg.gain.exponentialRampToValueAtTime(0.12,st+0.014);
+      sg.gain.exponentialRampToValueAtTime(0.0001,st+0.17);
+      s.connect(sg);
+      sg.connect(master);
+      s.start(st);
+      s.stop(st+0.18);
+    }
+
+    if(rarity==='legendary'){
+      const low=ctx.createOscillator();
+      low.type='sine';
+      low.frequency.setValueAtTime(150,now+0.02);
+      low.frequency.exponentialRampToValueAtTime(260,now+0.46);
+      const lg=ctx.createGain();
+      lg.gain.setValueAtTime(0.0001,now+0.02);
+      lg.gain.exponentialRampToValueAtTime(0.14,now+0.08);
+      lg.gain.exponentialRampToValueAtTime(0.0001,now+0.55);
+      low.connect(lg);
+      lg.connect(master);
+      low.start(now+0.02);
+      low.stop(now+0.56);
+    }
+  };
+
+  if(ctx.state==='suspended'){
+    ctx.resume().then(run).catch(()=>{});
+  }else{
+    run();
+  }
+};
+
+/* Final reveal wrapper: unlock first, then play SFX only when a card becomes flipped. */
+const g75OldRevealCard = revealCard;
+revealCard = function(i){
+  unlockGingaAudio();
+
+  const slot=$(`cs-${i}`);
+  const wasFlipped=slot && slot.classList.contains('flipped');
+
+  g75OldRevealCard(i);
+
+  const nowFlipped=slot && slot.classList.contains('flipped');
+  if(!wasFlipped && nowFlipped && PS && PS.results && PS.results[i]){
+    setTimeout(()=>playRevealCardSFX(PS.results[i].card.rarity),20);
+  }
+};
+
+
+/* ══════════ GPT PATCH 33 JS — v0.7.6 Pack Open SFX ══════════ */
+/* Adds SFX when opening/tearing the pack. Reveal SFX from v0.7.5 remains. */
+
+function playPackOpenSFX(){
+  const ctx=(typeof g75AudioCtx==='function') ? g75AudioCtx() : ((window.AudioContext||window.webkitAudioContext) ? new (window.AudioContext||window.webkitAudioContext)() : null);
+  if(!ctx) return;
+
+  const run=()=>{
+    const now=ctx.currentTime+0.006;
+    const master=ctx.createGain();
+    master.gain.setValueAtTime(0.0001,now);
+    master.gain.exponentialRampToValueAtTime(0.34,now+0.018);
+    master.gain.exponentialRampToValueAtTime(0.0001,now+0.72);
+    master.connect(ctx.destination);
+
+    /* Pack tear / paper rip noise */
+    const dur=0.42;
+    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      const t=i/data.length;
+      const burst=(Math.sin(t*Math.PI*18)>0?1:.35);
+      data[i]=(Math.random()*2-1)*(1-t*0.65)*burst*0.82;
+    }
+    const noise=ctx.createBufferSource();
+    noise.buffer=noiseBuffer;
+
+    const hp=ctx.createBiquadFilter();
+    hp.type='highpass';
+    hp.frequency.setValueAtTime(650,now);
+    hp.frequency.exponentialRampToValueAtTime(2200,now+dur);
+
+    const bp=ctx.createBiquadFilter();
+    bp.type='bandpass';
+    bp.frequency.setValueAtTime(1800,now);
+    bp.frequency.exponentialRampToValueAtTime(4200,now+dur);
+    bp.Q.setValueAtTime(0.75,now);
+
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0.0001,now);
+    ng.gain.exponentialRampToValueAtTime(0.42,now+0.026);
+    ng.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+
+    noise.connect(hp);
+    hp.connect(bp);
+    bp.connect(ng);
+    ng.connect(master);
+    noise.start(now);
+    noise.stop(now+dur);
+
+    /* Low sci-fi unlock thump */
+    const thump=ctx.createOscillator();
+    thump.type='sine';
+    thump.frequency.setValueAtTime(130,now);
+    thump.frequency.exponentialRampToValueAtTime(62,now+0.18);
+    const tg=ctx.createGain();
+    tg.gain.setValueAtTime(0.0001,now);
+    tg.gain.exponentialRampToValueAtTime(0.22,now+0.018);
+    tg.gain.exponentialRampToValueAtTime(0.0001,now+0.25);
+    thump.connect(tg);
+    tg.connect(master);
+    thump.start(now);
+    thump.stop(now+0.28);
+
+    /* Opening sparkle at the end of the tear */
+    for(let i=0;i<3;i++){
+      const o=ctx.createOscillator();
+      o.type='triangle';
+      const st=now+0.30+i*0.055;
+      o.frequency.setValueAtTime(760+i*190,st);
+      o.frequency.exponentialRampToValueAtTime(1020+i*220,st+0.12);
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(0.0001,st);
+      g.gain.exponentialRampToValueAtTime(0.075,st+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,st+0.16);
+      o.connect(g);
+      g.connect(master);
+      o.start(st);
+      o.stop(st+0.17);
+    }
+  };
+
+  if(ctx.state==='suspended'){
+    ctx.resume().then(run).catch(()=>{});
+  }else{
+    run();
+  }
+}
+
+const g76OldTearPack = tearPack;
+tearPack = function(){
+  if(PS.phase!=='idle'||!canOpen()) return;
+  if(typeof unlockGingaAudio==='function') unlockGingaAudio();
+  playPackOpenSFX();
+  g76OldTearPack();
+};
+
+
+/* ══════════ GPT PATCH 34 JS — v0.7.7 Longer & Louder Pack Open SFX ══════════ */
+/* Final GitHub build: pack opening sound is longer, louder, and more obvious. */
+
+playPackOpenSFX = function(){
+  const ctx=(typeof g75AudioCtx==='function') ? g75AudioCtx() : ((window.AudioContext||window.webkitAudioContext) ? new (window.AudioContext||window.webkitAudioContext)() : null);
+  if(!ctx) return;
+
+  const run=()=>{
+    const now=ctx.currentTime+0.006;
+
+    const master=ctx.createGain();
+    master.gain.setValueAtTime(0.0001,now);
+    master.gain.exponentialRampToValueAtTime(0.62,now+0.025);
+    master.gain.exponentialRampToValueAtTime(0.0001,now+1.48);
+    master.connect(ctx.destination);
+
+    /* Long pack tear / foil rip */
+    const dur=0.92;
+    const noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      const t=i/data.length;
+      const envelope=Math.pow(1-t,0.55);
+      const microBursts=(Math.sin(t*Math.PI*46)>0?1:.42);
+      const rough=(Math.random()*2-1);
+      data[i]=rough*envelope*microBursts*0.95;
+    }
+
+    const noise=ctx.createBufferSource();
+    noise.buffer=noiseBuffer;
+
+    const hp=ctx.createBiquadFilter();
+    hp.type='highpass';
+    hp.frequency.setValueAtTime(480,now);
+    hp.frequency.exponentialRampToValueAtTime(1850,now+dur);
+
+    const bp=ctx.createBiquadFilter();
+    bp.type='bandpass';
+    bp.frequency.setValueAtTime(1450,now);
+    bp.frequency.exponentialRampToValueAtTime(5200,now+dur);
+    bp.Q.setValueAtTime(0.95,now);
+
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0.0001,now);
+    ng.gain.exponentialRampToValueAtTime(0.72,now+0.035);
+    ng.gain.exponentialRampToValueAtTime(0.18,now+0.68);
+    ng.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+
+    noise.connect(hp);
+    hp.connect(bp);
+    bp.connect(ng);
+    ng.connect(master);
+    noise.start(now);
+    noise.stop(now+dur);
+
+    /* First impact: pack unlock thump */
+    const thump=ctx.createOscillator();
+    thump.type='sine';
+    thump.frequency.setValueAtTime(150,now);
+    thump.frequency.exponentialRampToValueAtTime(48,now+0.24);
+
+    const tg=ctx.createGain();
+    tg.gain.setValueAtTime(0.0001,now);
+    tg.gain.exponentialRampToValueAtTime(0.36,now+0.018);
+    tg.gain.exponentialRampToValueAtTime(0.0001,now+0.35);
+
+    thump.connect(tg);
+    tg.connect(master);
+    thump.start(now);
+    thump.stop(now+0.38);
+
+    /* Metallic zipper sweep */
+    const sweep=ctx.createOscillator();
+    sweep.type='sawtooth';
+    sweep.frequency.setValueAtTime(260,now+0.08);
+    sweep.frequency.exponentialRampToValueAtTime(1650,now+0.72);
+
+    const sf=ctx.createBiquadFilter();
+    sf.type='lowpass';
+    sf.frequency.setValueAtTime(2400,now+0.08);
+
+    const sg=ctx.createGain();
+    sg.gain.setValueAtTime(0.0001,now+0.08);
+    sg.gain.exponentialRampToValueAtTime(0.12,now+0.16);
+    sg.gain.exponentialRampToValueAtTime(0.0001,now+0.76);
+
+    sweep.connect(sf);
+    sf.connect(sg);
+    sg.connect(master);
+    sweep.start(now+0.08);
+    sweep.stop(now+0.78);
+
+    /* Second burst when cards are released */
+    const burstBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.22),ctx.sampleRate);
+    const burstData=burstBuffer.getChannelData(0);
+    for(let i=0;i<burstData.length;i++){
+      const t=i/burstData.length;
+      burstData[i]=(Math.random()*2-1)*Math.pow(1-t,1.15)*0.85;
+    }
+    const burst=ctx.createBufferSource();
+    burst.buffer=burstBuffer;
+
+    const bf=ctx.createBiquadFilter();
+    bf.type='bandpass';
+    bf.frequency.setValueAtTime(3600,now+0.72);
+    bf.Q.setValueAtTime(1.2,now+0.72);
+
+    const bg=ctx.createGain();
+    bg.gain.setValueAtTime(0.0001,now+0.70);
+    bg.gain.exponentialRampToValueAtTime(0.42,now+0.74);
+    bg.gain.exponentialRampToValueAtTime(0.0001,now+0.96);
+
+    burst.connect(bf);
+    bf.connect(bg);
+    bg.connect(master);
+    burst.start(now+0.70);
+    burst.stop(now+0.98);
+
+    /* Longer magical reveal chime tail */
+    const notes=[620,780,980,1240,1560];
+    notes.forEach((freq,i)=>{
+      const o=ctx.createOscillator();
+      o.type=i%2?'triangle':'sine';
+      const st=now+0.58+i*0.075;
+      o.frequency.setValueAtTime(freq,st);
+      o.frequency.exponentialRampToValueAtTime(freq*1.12,st+0.22);
+
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(0.0001,st);
+      g.gain.exponentialRampToValueAtTime(0.105,st+0.018);
+      g.gain.exponentialRampToValueAtTime(0.0001,st+0.46);
+
+      o.connect(g);
+      g.connect(master);
+      o.start(st);
+      o.stop(st+0.48);
+    });
+
+    /* Subtle low sci-fi tail */
+    const tail=ctx.createOscillator();
+    tail.type='sine';
+    tail.frequency.setValueAtTime(92,now+0.48);
+    tail.frequency.exponentialRampToValueAtTime(138,now+1.20);
+
+    const tailGain=ctx.createGain();
+    tailGain.gain.setValueAtTime(0.0001,now+0.48);
+    tailGain.gain.exponentialRampToValueAtTime(0.09,now+0.62);
+    tailGain.gain.exponentialRampToValueAtTime(0.0001,now+1.34);
+
+    tail.connect(tailGain);
+    tailGain.connect(master);
+    tail.start(now+0.48);
+    tail.stop(now+1.38);
+  };
+
+  if(ctx.state==='suspended'){
+    ctx.resume().then(run).catch(()=>{});
+  }else{
+    run();
+  }
 };
 
 
